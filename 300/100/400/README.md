@@ -46,6 +46,8 @@ Before setting up Azure resources, ensure you have the following prerequisites:
   - Windows: `winget install Microsoft.AzureCLI`
   - Linux: `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
   
+  *WARNING**: The installation is one of the most time-consuming parts of the entire process, so once it's done, everything else will be much faster.
+
   ```bash
   # Login to Azure (if not already logged in)
   az login
