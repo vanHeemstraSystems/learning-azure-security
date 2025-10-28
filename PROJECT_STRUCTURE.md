@@ -7,7 +7,7 @@ This document provides an overview of the complete repository structure.
 ```
 Learning-Azure-Security/
 │
-├── README.md                          # Main project documentation
+├── 300/100/README.md                  # Main project documentation
 ├── LICENSE                            # MIT License
 ├── .gitignore                         # Git ignore rules
 ├── .env.example                       # Environment configuration template
