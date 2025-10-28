@@ -1,1 +1,71 @@
+# Python
 
+**pycache**/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+
+venv/
+ENV/
+env/
+.venv
+
+# Environment Variables
+
+.env
+.env.local
+
+# IDE
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+
+*.log
+logs/
+azure_security_scanner.log
+
+# Reports
+
+reports/
+*.json
+*.html
+
+# Azure
+
+.azure/
+
+# Credentials (NEVER commit these!)
+
+credentials.json
+service_principal.json
+*.pem
+*.pfx
+*.key
+
+# OS
+
+Thumbs.db
