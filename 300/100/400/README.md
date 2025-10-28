@@ -39,7 +39,14 @@ Before setting up Azure resources, ensure you have the following prerequisites:
   ```bash
   # Check if Azure CLI is installed
   az --version
+  ```
   
+  **If Azure CLI is not installed**, see the detailed installation instructions in [`docs/AZURE_SETUP.md`](../docs/AZURE_SETUP.md) for:
+  - macOS: `brew install azure-cli`
+  - Windows: `winget install Microsoft.AzureCLI`
+  - Linux: `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
+  
+  ```bash
   # Login to Azure (if not already logged in)
   az login
   ```
