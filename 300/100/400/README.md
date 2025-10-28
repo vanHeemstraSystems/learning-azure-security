@@ -31,7 +31,69 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Step 4: Create Azure Resources
+### Step 4: Prerequisites
+
+Before setting up Azure resources, ensure you have the following prerequisites:
+
+- **Azure CLI installed and logged in**
+  ```bash
+  # Check if Azure CLI is installed
+  az --version
+  
+  # Login to Azure (if not already logged in)
+  az login
+  ```
+- **Active Azure subscription**
+  ```bash
+  # List available subscriptions
+  az account list --output table
+  
+  # Set the correct subscription (if needed)
+  az account set --subscription "Your-Subscription-Name-or-ID"
+  ```
+- **Appropriate permissions** to create resources and Service Principals:
+  - Create Service Principals (Application Administrator or Global Administrator)
+  - Create Resource Groups
+  - Create Key Vaults
+  - Assign RBAC roles at subscription level
+
+### Step 5: Azure Setup
+
+Now that prerequisites are met, choose one of the following approaches to set up your Azure resources:
+
+#### Option A: Quick Setup (Recommended)
+Run the automated setup script for the fastest setup:
+
+```bash
+# Make the script executable and run it
+chmod +x quick-setup.sh
+./quick-setup.sh
+```
+
+This will automatically:
+- ✅ Verify Azure CLI installation and login
+- ✅ Create Resource Group, Service Principal, and Key Vault
+- ✅ Configure RBAC permissions
+- ✅ Store credentials securely in Key Vault
+- ✅ Generate `.env` configuration file
+
+#### Option B: Manual Setup
+Follow the detailed setup guides for more control:
+
+- **Comprehensive Guide**: See [`docs/AZURE_SETUP.md`](../docs/AZURE_SETUP.md) for complete setup with troubleshooting
+- **Simplified Guide**: See [`SETUP_GUIDE.md`](../../SETUP_GUIDE.md) for step-by-step manual process
+
+#### What Gets Created
+Regardless of which option you choose, the setup will create:
+- Resource Group for organizing resources
+- Service Principal with appropriate permissions (Reader, Security Reader, Key Vault Reader)
+- Azure Key Vault for secure credential storage
+- RBAC role assignments for proper access control
+- `.env` configuration file
+
+**After completing the setup above, you can proceed to the next step.**
+
+### Step 6: Create Azure Resources
 
 #### Create a Service Principal
 
@@ -72,7 +134,7 @@ az keyvault set-policy --name "mysecurityscanner-kv" \
    --secret-permissions get list
 ```
 
-### Step 5: Configure Environment
+### Step 7: Configure Environment
 
 Create a `.env` file:
 
@@ -81,7 +143,7 @@ AZURE_SUBSCRIPTION_ID=your-subscription-id
 AZURE_KEY_VAULT_NAME=mysecurityscanner-kv
 ```
 
-### Step 6: Run the Scanner
+### Step 8: Run the Scanner
 
 ```bash
 python azure_security_scanner.py
