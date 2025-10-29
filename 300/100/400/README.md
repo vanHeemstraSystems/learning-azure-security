@@ -42,7 +42,7 @@ Before setting up Azure resources, ensure you have the following prerequisites:
   ```
   
   **If Azure CLI is not installed**, see the detailed installation instructions in [`docs/AZURE_SETUP.md`](../docs/AZURE_SETUP.md) for:
-  - macOS: `brew install azure-cli` **RECOMMENDED8**: Install Azure CLI via pip, as it installs better on (old) Macs.
+  - macOS: `brew install azure-cli` **RECOMMENDED**: Install Azure CLI via pip, as it installs better on (old) Macs.
   - Windows: `winget install Microsoft.AzureCLI`
   - Linux: `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
   
