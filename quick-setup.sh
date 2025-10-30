@@ -111,6 +111,21 @@ read CLIENT_ID CLIENT_SECRET TENANT_ID < <(az ad sp create-for-rbac \
   --query '[appId,password,tenant]' \
   -o tsv)
 
+# Fallbacks when the create command doesn't return a password or tenant
+if [[ -z "$TENANT_ID" ]]; then
+  TENANT_ID=$(az account show --query tenantId -o tsv)
+fi
+if [[ -z "$CLIENT_SECRET" && -n "$CLIENT_ID" ]]; then
+  echo "  No client secret returned; creating a new credential..."
+  CLIENT_SECRET=$(az ad app credential reset --id "$CLIENT_ID" --query password -o tsv)
+fi
+
+# Validate SP values before proceeding
+if [[ -z "$CLIENT_ID" || -z "$CLIENT_SECRET" || -z "$TENANT_ID" ]]; then
+  echo "Failed to obtain Service Principal credentials (appId/password/tenant). Aborting."
+  exit 1
+fi
+
 echo "  Service Principal created"
 echo "    App ID: $CLIENT_ID"
 
