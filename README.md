@@ -1,6 +1,8 @@
 learning-azure-security
 # Learning Azure Security
 
+- [References](./REFERENCES.md)
+
 ## 100 - Introduction
 
 ## 200 - Requirements
