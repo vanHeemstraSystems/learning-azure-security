@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Azure Security Scanner
-A tool to scan Azure resources for security misconfigurations and compliance issues.
+
+A tool to scan Azure resources for security misconfigurations and
+compliance issues.
 
 Key concepts demonstrated:
 - Azure AD Service Principal authentication
@@ -74,7 +76,9 @@ class AzureSecurityScanner:
         self.findings: List[SecurityFinding] = []
 
         logger.info("Initializing Azure Security Scanner...")
-        logger.info(f"Subscription ID: {subscription_id}")
+        logger.info(
+            f"Subscription ID: {subscription_id}"
+        )
 
     def authenticate(self) -> bool:
         """Authenticate using Key Vault-stored SP credentials or DefaultAzureCredential."""
@@ -83,10 +87,17 @@ class AzureSecurityScanner:
 
             if self.key_vault_name:
                 # Retrieve credentials from Key Vault
-                logger.info(f"Retrieving credentials from Key Vault: {self.key_vault_name}")
+                logger.info(
+                    f"Retrieving credentials from Key Vault: {self.key_vault_name}"
+                )
                 kv_credential = DefaultAzureCredential()
-                key_vault_uri = f"https://{self.key_vault_name}.vault.azure.net"
-                secret_client = SecretClient(vault_url=key_vault_uri, credential=kv_credential)
+                key_vault_uri = (
+                    f"https://{self.key_vault_name}.vault.azure.net"
+                )
+                secret_client = SecretClient(
+                    vault_url=key_vault_uri,
+                    credential=kv_credential,
+                )
 
                 client_id = secret_client.get_secret("azure-client-id").value
                 client_secret = secret_client.get_secret("azure-client-secret").value
@@ -100,11 +111,16 @@ class AzureSecurityScanner:
                     client_secret=client_secret,
                 )
             else:
-                logger.info("Using DefaultAzureCredential (Managed Identity/Azure CLI)")
+                logger.info(
+                    "Using DefaultAzureCredential (Managed Identity/Azure CLI)"
+                )
                 self.credential = DefaultAzureCredential()
 
             # Test by listing resource groups
-            resource_client = ResourceManagementClient(self.credential, self.subscription_id)
+            resource_client = ResourceManagementClient(
+                self.credential,
+                self.subscription_id,
+            )
             list(resource_client.resource_groups.list())
 
             logger.info("Authentication successful")
@@ -127,8 +143,13 @@ class AzureSecurityScanner:
         logger.info("=" * 60)
 
         try:
-            storage_client = StorageManagementClient(self.credential, self.subscription_id)
-            accounts = list(storage_client.storage_accounts.list())
+            storage_client = StorageManagementClient(
+                self.credential,
+                self.subscription_id,
+            )
+            accounts = list(
+                storage_client.storage_accounts.list()
+            )
             logger.info(f"Found {len(accounts)} storage account(s)")
 
             for account in accounts:
@@ -137,68 +158,101 @@ class AzureSecurityScanner:
                 # Public access
                 if getattr(account, 'public_network_access', None) == "Enabled":
                     if getattr(account, 'allow_blob_public_access', False):
-                        self.findings.append(SecurityFinding(
-                            resource_type="Storage Account",
-                            resource_name=account.name,
-                            resource_id=account.id,
-                            severity="HIGH",
-                            issue="Public blob access is enabled",
-                            recommendation=(
-                                "Disable public blob access unless required. Use Azure AD or SAS tokens."
-                            ),
-                            compliant=False,
-                        ))
-                        logger.warning("  PUBLIC ACCESS ENABLED - Security Risk")
+                        self.findings.append(
+                            SecurityFinding(
+                                resource_type="Storage Account",
+                                resource_name=account.name,
+                                resource_id=account.id,
+                                severity="HIGH",
+                                issue="Public blob access is enabled",
+                                recommendation=(
+                                    "Disable public blob access unless required. "
+                                    "Use Azure AD or SAS tokens."
+                                ),
+                                compliant=False,
+                            )
+                        )
+                        logger.warning(
+                            "  PUBLIC ACCESS ENABLED - Security Risk"
+                        )
                     else:
                         logger.info("  Public blob access disabled")
 
                 # HTTPS-only
                 if not getattr(account, 'enable_https_traffic_only', True):
-                    self.findings.append(SecurityFinding(
-                        resource_type="Storage Account",
-                        resource_name=account.name,
-                        resource_id=account.id,
-                        severity="HIGH",
-                        issue="HTTPS-only traffic is not enforced",
-                        recommendation="Enable 'Secure transfer required' to enforce HTTPS-only.",
-                        compliant=False,
-                    ))
-                    logger.warning("  HTTPS-only NOT ENFORCED")
+                    self.findings.append(
+                        SecurityFinding(
+                            resource_type="Storage Account",
+                            resource_name=account.name,
+                            resource_id=account.id,
+                            severity="HIGH",
+                            issue="HTTPS-only traffic is not enforced",
+                            recommendation=(
+                                "Enable 'Secure transfer required' to enforce HTTPS-only."
+                            ),
+                            compliant=False,
+                        )
+                    )
+                    logger.warning(
+                        "  HTTPS-only NOT ENFORCED"
+                    )
                 else:
                     logger.info("  HTTPS-only enforced")
 
                 # Encryption at rest
                 enc = getattr(account, 'encryption', None)
                 services = getattr(enc, 'services', None) if enc else None
-                blob_encrypted = bool(getattr(services.blob, 'enabled', False)) if services and getattr(services, 'blob', None) else False
-                file_encrypted = bool(getattr(services.file, 'enabled', False)) if services and getattr(services, 'file', None) else False
+                blob_encrypted = (
+                    bool(getattr(services.blob, 'enabled', False))
+                    if services and getattr(services, 'blob', None)
+                    else False
+                )
+                file_encrypted = (
+                    bool(getattr(services.file, 'enabled', False))
+                    if services and getattr(services, 'file', None)
+                    else False
+                )
                 if blob_encrypted and file_encrypted:
                     logger.info("  Encryption at rest enabled")
                 else:
-                    self.findings.append(SecurityFinding(
-                        resource_type="Storage Account",
-                        resource_name=account.name,
-                        resource_id=account.id,
-                        severity="HIGH",
-                        issue="Encryption at rest not fully enabled",
-                        recommendation="Enable encryption for blob and file services.",
-                        compliant=False,
-                    ))
-                    logger.warning("  Encryption incomplete")
+                    self.findings.append(
+                        SecurityFinding(
+                            resource_type="Storage Account",
+                            resource_name=account.name,
+                            resource_id=account.id,
+                            severity="HIGH",
+                            issue="Encryption at rest not fully enabled",
+                            recommendation=(
+                                "Enable encryption for blob and file services."
+                            ),
+                            compliant=False,
+                        )
+                    )
+                    logger.warning(
+                        "  Encryption incomplete"
+                    )
 
                 # Minimum TLS version
                 min_tls = getattr(account, 'minimum_tls_version', None)
                 if min_tls and min_tls != "TLS1_2":
-                    self.findings.append(SecurityFinding(
-                        resource_type="Storage Account",
-                        resource_name=account.name,
-                        resource_id=account.id,
-                        severity="MEDIUM",
-                        issue=f"Minimum TLS version is {min_tls}, should be TLS1_2",
-                        recommendation="Set minimum TLS version to TLS 1.2.",
-                        compliant=False,
-                    ))
-                    logger.warning(f"  TLS version: {min_tls}")
+                    self.findings.append(
+                        SecurityFinding(
+                            resource_type="Storage Account",
+                            resource_name=account.name,
+                            resource_id=account.id,
+                            severity="MEDIUM",
+                            issue=(
+                                f"Minimum TLS version is {min_tls}, should be TLS1_2"
+                            ),
+                            recommendation=(
+                                "Set minimum TLS version to TLS 1.2."
+                            ),
+                            compliant=False,
+                        )
+                    )
+                    logger.warning(
+                        f"  TLS version: {min_tls}"
+                    )
                 elif min_tls:
                     logger.info("  TLS 1.2 enforced")
 
@@ -217,8 +271,13 @@ class AzureSecurityScanner:
         high_risk_ports = [22, 3389, 1433, 3306, 5432, 445, 135, 139]
 
         try:
-            network_client = NetworkManagementClient(self.credential, self.subscription_id)
-            nsgs = list(network_client.network_security_groups.list_all())
+            network_client = NetworkManagementClient(
+                self.credential,
+                self.subscription_id,
+            )
+            nsgs = list(
+                network_client.network_security_groups.list_all()
+            )
             logger.info(f"Found {len(nsgs)} Network Security Group(s)")
 
             for nsg in nsgs:
@@ -233,7 +292,11 @@ class AzureSecurityScanner:
                         if isinstance(source_addresses, str):
                             source_addresses = [source_addresses]
 
-                        if "*" in source_addresses or "0.0.0.0/0" in source_addresses or "Internet" in source_addresses:
+                        if (
+                            "*" in source_addresses
+                            or "0.0.0.0/0" in source_addresses
+                            or "Internet" in source_addresses
+                        ):
                             dest_ports: List[int] = []
                             if rule.destination_port_range:
                                 if rule.destination_port_range == "*":
@@ -247,18 +310,28 @@ class AzureSecurityScanner:
                             exposed = [p for p in dest_ports if p in high_risk_ports]
                             if exposed or rule.destination_port_range == "*":
                                 severity = "HIGH" if exposed else "MEDIUM"
-                                port_info = f"ports {exposed}" if exposed else "all ports"
-                                self.findings.append(SecurityFinding(
-                                    resource_type="Network Security Group",
-                                    resource_name=nsg.name,
-                                    resource_id=nsg.id,
-                                    severity=severity,
-                                    issue=f"Rule '{rule.name}' allows inbound Internet on {port_info}",
-                                    recommendation=(
-                                        "Restrict source IP ranges. Avoid exposing 22/3389; use Bastion or VPN."
-                                    ),
-                                    compliant=False,
-                                ))
+                                port_info = (
+                                    f"ports {exposed}" if exposed else "all ports"
+                                )
+                                self.findings.append(
+                                    SecurityFinding(
+                                        resource_type=(
+                                            "Network Security Group"
+                                        ),
+                                        resource_name=nsg.name,
+                                        resource_id=nsg.id,
+                                        severity=severity,
+                                        issue=(
+                                            f"Rule '{rule.name}' allows inbound Internet on "
+                                            f"{port_info}"
+                                        ),
+                                        recommendation=(
+                                            "Restrict source IP ranges. Avoid exposing 22/3389; "
+                                            "use Bastion or VPN."
+                                        ),
+                                        compliant=False,
+                                    )
+                                )
                                 logger.warning(f"  OVERLY PERMISSIVE: Rule '{rule.name}' ({port_info})")
 
                 logger.info(f"  Analyzed {len(nsg.security_rules)} rule(s)")
@@ -280,18 +353,27 @@ class AzureSecurityScanner:
         logger.info("=" * 60)
 
         try:
-            kv_client = KeyVaultManagementClient(self.credential, self.subscription_id)
-            vaults = list(kv_client.vaults.list())
+            kv_client = KeyVaultManagementClient(
+                self.credential,
+                self.subscription_id,
+            )
+            vaults = list(
+                kv_client.vaults.list()
+            )
             logger.info(f"Found {len(vaults)} Key Vault(s)")
 
             for vault in vaults:
-                # Ensure we have a full Vault model (some SDK versions return generic Resource)
+                # Ensure we have a full Vault model (some SDK versions return
+                # generic Resource)
                 vault_id = getattr(vault, 'id', None)
                 vault_name = getattr(vault, 'name', None)
-                logger.info(f"\n→ Analyzing: {vault_name}")
+                logger.info(
+                    f"\n→ Analyzing: {vault_name}"
+                )
 
                 if not hasattr(vault, 'properties') or vault.properties is None:
-                    # Extract resource group from resource ID: /subscriptions/.../resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{name}
+                    # Extract resource group from resource ID:
+                    # /subscriptions/.../resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{name}
                     try:
                         parts = (vault_id or '').split('/')
                         rg_idx = parts.index('resourceGroups') + 1
@@ -299,53 +381,70 @@ class AzureSecurityScanner:
                         # Fetch full vault
                         vault = kv_client.vaults.get(resource_group, vault_name)
                     except Exception:
-                        logger.debug(f"Could not resolve full Key Vault model for {vault_name}; skipping detailed checks.")
+                        logger.debug(
+                            "Could not resolve full Key Vault model for "
+                            f"{vault_name}; skipping detailed checks."
+                        )
                         continue
 
                 # Soft delete
                 if getattr(vault.properties, 'enable_soft_delete', False):
                     logger.info("  Soft delete enabled")
                 else:
-                    self.findings.append(SecurityFinding(
-                        resource_type="Key Vault",
-                        resource_name=vault.name,
-                        resource_id=vault.id,
-                        severity="MEDIUM",
-                        issue="Soft delete is not enabled",
-                        recommendation="Enable soft delete.",
-                        compliant=False,
-                    ))
-                    logger.warning("  Soft delete DISABLED")
+                    self.findings.append(
+                        SecurityFinding(
+                            resource_type="Key Vault",
+                            resource_name=vault.name,
+                            resource_id=vault.id,
+                            severity="MEDIUM",
+                            issue="Soft delete is not enabled",
+                            recommendation="Enable soft delete.",
+                            compliant=False,
+                        )
+                    )
+                    logger.warning(
+                        "  Soft delete DISABLED"
+                    )
 
                 # Purge protection
                 if getattr(vault.properties, 'enable_purge_protection', False):
                     logger.info("  Purge protection enabled")
                 else:
-                    self.findings.append(SecurityFinding(
-                        resource_type="Key Vault",
-                        resource_name=vault.name,
-                        resource_id=vault.id,
-                        severity="LOW",
-                        issue="Purge protection is not enabled",
-                        recommendation="Enable purge protection for production vaults.",
-                        compliant=False,
-                    ))
+                    self.findings.append(
+                        SecurityFinding(
+                            resource_type="Key Vault",
+                            resource_name=vault.name,
+                            resource_id=vault.id,
+                            severity="LOW",
+                            issue="Purge protection is not enabled",
+                            recommendation=(
+                                "Enable purge protection for production vaults."
+                            ),
+                            compliant=False,
+                        )
+                    )
 
                 # Network rules
                 acls = getattr(vault.properties, 'network_acls', None)
                 if acls and getattr(acls, 'default_action', None) == "Deny":
                     logger.info("  Network access restricted (default deny)")
                 elif acls:
-                    self.findings.append(SecurityFinding(
-                        resource_type="Key Vault",
-                        resource_name=vault.name,
-                        resource_id=vault.id,
-                        severity="MEDIUM",
-                        issue="Key Vault allows access from all networks",
-                        recommendation="Restrict access to specific VNets or IP ranges.",
-                        compliant=False,
-                    ))
-                    logger.warning("  Open to all networks")
+                    self.findings.append(
+                        SecurityFinding(
+                            resource_type="Key Vault",
+                            resource_name=vault.name,
+                            resource_id=vault.id,
+                            severity="MEDIUM",
+                            issue="Key Vault allows access from all networks",
+                            recommendation=(
+                                "Restrict access to specific VNets or IP ranges."
+                            ),
+                            compliant=False,
+                        )
+                    )
+                    logger.warning(
+                        "  Open to all networks"
+                    )
 
             return len(vaults)
 
@@ -360,8 +459,13 @@ class AzureSecurityScanner:
         logger.info("=" * 60)
 
         try:
-            compute_client = ComputeManagementClient(self.credential, self.subscription_id)
-            vms = list(compute_client.virtual_machines.list_all())
+            compute_client = ComputeManagementClient(
+                self.credential,
+                self.subscription_id,
+            )
+            vms = list(
+                compute_client.virtual_machines.list_all()
+            )
             logger.info(f"Found {len(vms)} Virtual Machine(s)")
 
             for vm in vms:
@@ -369,19 +473,24 @@ class AzureSecurityScanner:
 
                 # Boot diagnostics
                 diag_profile = getattr(vm, 'diagnostics_profile', None)
-                boot_diag = getattr(diag_profile, 'boot_diagnostics', None) if diag_profile else None
+                boot_diag = (
+                    getattr(diag_profile, 'boot_diagnostics', None)
+                    if diag_profile else None
+                )
                 if boot_diag and getattr(boot_diag, 'enabled', False):
                     logger.info("  Boot diagnostics enabled")
                 else:
-                    self.findings.append(SecurityFinding(
-                        resource_type="Virtual Machine",
-                        resource_name=vm.name,
-                        resource_id=vm.id,
-                        severity="LOW",
-                        issue="Boot diagnostics not enabled",
-                        recommendation="Enable boot diagnostics.",
-                        compliant=False,
-                    ))
+                    self.findings.append(
+                        SecurityFinding(
+                            resource_type="Virtual Machine",
+                            resource_name=vm.name,
+                            resource_id=vm.id,
+                            severity="LOW",
+                            issue="Boot diagnostics not enabled",
+                            recommendation="Enable boot diagnostics.",
+                            compliant=False,
+                        )
+                    )
 
                 # Identity
                 identity = getattr(vm, 'identity', None)
@@ -445,20 +554,30 @@ class AzureSecurityScanner:
 
     def _generate_html_report(self, scan_result: ScanResult) -> str:
         """Generate an HTML report from scan results."""
-        severity_colors = {"HIGH": "#dc3545", "MEDIUM": "#ffc107", "LOW": "#17a2b8"}
+        severity_colors = {
+            "HIGH": "#dc3545",
+            "MEDIUM": "#ffc107",
+            "LOW": "#17a2b8",
+        }
         findings_html = ""
         for finding in scan_result.findings:
             color = severity_colors.get(finding.severity, "#6c757d")
             findings_html += f"""
         <div class="finding {finding.severity.lower()}">
             <div class="finding-header">
-                <span class="severity" style="background-color: {color}">{finding.severity}</span>
+                <span class="severity" style="background-color: {color}">
+                    {finding.severity}
+                </span>
                 <span class="resource-type">{finding.resource_type}</span>
                 <span class="resource-name">{finding.resource_name}</span>
             </div>
             <div class="finding-body">
-                <p><strong>Issue:</strong> {finding.issue}</p>
-                <p><strong>Recommendation:</strong> {finding.recommendation}</p>
+                <p><strong>Issue:</strong>
+                    {finding.issue}
+                </p>
+                <p><strong>Recommendation:</strong>
+                    {finding.recommendation}
+                </p>
                 <p class="resource-id"><small>{finding.resource_id}</small></p>
             </div>
         </div>
@@ -471,14 +590,17 @@ class AzureSecurityScanner:
         <title>Azure Security Scan Report</title>
         <style>
             body {{
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+                font-family: -apple-system, BlinkMacSystemFont,
+                  'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
                 max-width: 1200px;
                 margin: 0 auto;
                 padding: 20px;
                 background-color: #f5f5f5;
             }}
             .header {{
-                background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+                background: linear-gradient(
+                  135deg, #0078d4 0%, #005a9e 100%
+                );
                 color: white;
                 padding: 30px;
                 border-radius: 8px;
@@ -486,7 +608,9 @@ class AzureSecurityScanner:
             }}
             .summary {{
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                grid-template-columns: repeat(
+                  auto-fit, minmax(200px, 1fr)
+                );
                 gap: 15px;
                 margin-bottom: 30px;
             }}
@@ -568,23 +692,32 @@ class AzureSecurityScanner:
                 <p>Total Findings</p>
             </div>
             <div class="summary-card">
-                <h3 style="color: #dc3545">{scan_result.summary['HIGH']}</h3>
+                <h3 style="color: #dc3545">
+                    {scan_result.summary['HIGH']}
+                </h3>
                 <p>High Severity</p>
             </div>
             <div class="summary-card">
-                <h3 style="color: #ffc107">{scan_result.summary['MEDIUM']}</h3>
+                <h3 style="color: #ffc107">
+                    {scan_result.summary['MEDIUM']}
+                </h3>
                 <p>Medium Severity</p>
             </div>
             <div class="summary-card">
-                <h3 style="color: #17a2b8">{scan_result.summary['LOW']}</h3>
+                <h3 style="color: #17a2b8">
+                    {scan_result.summary['LOW']}
+                </h3>
                 <p>Low Severity</p>
             </div>
         </div>
 
         <h2>Findings</h2>
-        {findings_html if findings_html else "<p>No security issues found! 🎉</p>"}
+        {findings_html if findings_html else (
+            "<p>No security issues found! 🎉</p>"
+        )}
 
-        <div style="margin-top: 40px; padding: 20px; background: #e9ecef; border-radius: 8px;">
+        <div style="margin-top: 40px; padding: 20px; background: #e9ecef; \
+          border-radius: 8px;">
             <h3>Next Steps</h3>
             <ol>
                 <li>Review all HIGH severity findings immediately</li>
