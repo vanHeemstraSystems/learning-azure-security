@@ -52,13 +52,44 @@ Before setting up Azure resources, ensure you have the following prerequisites:
   # Login to Azure (if not already logged in)
   az login
   ```
+
+> If `az login` fails with AADSTS50076 (MFA required) or shows tenants but no subscriptions, do the following:
+
+1) Use device-code login for a specific tenant and allow no subscriptions:
+
+```bash
+az login --tenant 3b17c802-1eab-41d5-9a28-78cab9c3b05f --use-device-code --allow-no-subscriptions
+# If you also need the other tenant:
+az login --tenant bad69fe5-f001-4a91-9e67-9ceebf327367 --use-device-code --allow-no-subscriptions
+```
+
+2) Verify tenant and subscription visibility:
+
+```bash
+az account tenant list -o table
+az account list -o table
+```
+
+3) If a subscription is available, set it explicitly:
+
+```bash
+az account set --subscription "<SUBSCRIPTION_NAME_OR_ID>" (here: "Pay-As-You-Go")
+```
+
+Notes:
+- AADSTS50076 indicates MFA is required. `--use-device-code` reliably triggers MFA in your browser.
+- If you only need Entra ID directory operations and have no subscriptions, keep `--allow-no-subscriptions`.
+- If no subscriptions appear, ask a tenant admin to assign you a role on a subscription (e.g., Reader/Contributor/Owner).
+
+
+
 - **Active Azure subscription**
   ```bash
   # List available subscriptions
   az account list --output table
   
   # Set the correct subscription (if needed)
-  az account set --subscription "Your-Subscription-Name-or-ID"
+  az account set --subscription "Your-Subscription-Name-or-ID" (here: "Pay-As-You-Go")
   ```
 - **Appropriate permissions** to create resources and Service Principals:
   - Create Service Principals (Application Administrator or Global Administrator)
