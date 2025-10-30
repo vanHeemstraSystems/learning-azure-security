@@ -270,7 +270,11 @@ class AzureSecurityScanner:
             return 0
 
     def scan_key_vaults(self) -> int:
-        """Scan Key Vaults for secure configuration."""
+        """Scan Key Vaults for secure configuration.
+
+        Handles cases where the SDK returns generic Resource objects by
+        fetching the full Vault resource via get(resource_group, name).
+        """
         logger.info("\n" + "=" * 60)
         logger.info("SCANNING: Key Vaults")
         logger.info("=" * 60)
@@ -281,7 +285,22 @@ class AzureSecurityScanner:
             logger.info(f"Found {len(vaults)} Key Vault(s)")
 
             for vault in vaults:
-                logger.info(f"\n→ Analyzing: {vault.name}")
+                # Ensure we have a full Vault model (some SDK versions return generic Resource)
+                vault_id = getattr(vault, 'id', None)
+                vault_name = getattr(vault, 'name', None)
+                logger.info(f"\n→ Analyzing: {vault_name}")
+
+                if not hasattr(vault, 'properties') or vault.properties is None:
+                    # Extract resource group from resource ID: /subscriptions/.../resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{name}
+                    try:
+                        parts = (vault_id or '').split('/')
+                        rg_idx = parts.index('resourceGroups') + 1
+                        resource_group = parts[rg_idx]
+                        # Fetch full vault
+                        vault = kv_client.vaults.get(resource_group, vault_name)
+                    except Exception:
+                        logger.debug(f"Could not resolve full Key Vault model for {vault_name}; skipping detailed checks.")
+                        continue
 
                 # Soft delete
                 if getattr(vault.properties, 'enable_soft_delete', False):
