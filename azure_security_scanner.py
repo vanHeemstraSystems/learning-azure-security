@@ -610,6 +610,22 @@ def main() -> None:
     """Main entry point for the scanner."""
     import argparse
 
+    # Load variables from a local .env file if present (no external deps)
+    env_path = Path('.env')
+    if env_path.exists():
+        try:
+            for line in env_path.read_text().splitlines():
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if '=' in line:
+                    key, value = line.split('=', 1)
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+                    os.environ.setdefault(key, value)
+        except Exception as e:
+            logger.debug(f"Could not parse .env file: {e}")
+
     parser = argparse.ArgumentParser(
         description="Azure Security Scanner - Scan Azure resources for security misconfigurations"
     )

@@ -208,6 +208,13 @@ AZURE_SUBSCRIPTION_ID=your-subscription-id
 AZURE_KEY_VAULT_NAME=mysecurityscanner-kv
 ```
 
+The scanner will automatically load variables from a local `.env` file if present. Alternatively, export them in your shell before running:
+
+```bash
+export AZURE_SUBSCRIPTION_ID="your-subscription-id"
+export AZURE_KEY_VAULT_NAME="mysecurityscanner-kv"
+```
+
 ### Step 8: Run the Scanner
 
 ```bash
