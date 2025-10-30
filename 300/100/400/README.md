@@ -117,6 +117,31 @@ This will automatically:
 - ✅ Store credentials securely in Key Vault
 - ✅ Generate `.env` configuration file
 
+> If you encounter `MissingSubscriptionRegistration` for `Microsoft.KeyVault` during setup, register the provider and retry:
+
+```bash
+# Check registration state
+az provider show -n Microsoft.KeyVault --query registrationState -o tsv
+
+# Register the provider if not Registered
+az provider register --namespace Microsoft.KeyVault
+
+# (Optional) Register commonly needed providers
+az provider register --namespace Microsoft.Network
+az provider register --namespace Microsoft.Authorization
+az provider register --namespace Microsoft.Resources
+
+# Wait until Key Vault is Registered
+while [ "$(az provider show -n Microsoft.KeyVault --query registrationState -o tsv)" != "Registered" ]; do
+  echo "Waiting for Microsoft.KeyVault registration..."; sleep 5;
+done
+
+# Re-run the quick setup
+./quick-setup.sh
+```
+
+> Key Vault naming rules: A vault name must be 3–24 characters, start with a letter, end with a letter or digit, use only letters/digits/hyphens, and must not contain consecutive hyphens. If your entered name is invalid, the script will prompt you to enter a valid one. Example valid names: `secscan-kv-a1b2c3`, `kvsecurity01`.
+
 #### Option B: Manual Setup
 Follow the detailed setup guides for more control:
 
